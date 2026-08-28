@@ -3,14 +3,18 @@
 set -euo pipefail
 umask 077
 
-DEST="/mnt/pve/backup-desktop/host-config"
+BACKUP_MOUNT="{{ proxmox_config_backup_mount }}"
+DEST="${BACKUP_MOUNT}/{{ proxmox_config_backup_subdir }}"
+KEEP_BACKUPS={{ proxmox_config_backup_keep }}
+
 INFO="/root/pve01-backup-info"
 DATE="$(date +%F_%H-%M)"
 BACKUP="$DEST/pve01-config-$DATE.tar.gz"
 
 # Garante que o storage de backup está acessível
-if ! mountpoint -q /mnt/pve/backup-desktop; then
-    logger -t pve01-config-backup "ERRO: backup-desktop não está montado"
+if ! mountpoint -q "$BACKUP_MOUNT"; then
+    logger -t pve01-config-backup \
+        "ERRO: $BACKUP_MOUNT não está montado"
     exit 1
 fi
 
@@ -47,14 +51,14 @@ tar \
     /root/homelab-ca \
     "$INFO"
 
-# Mantém somente os 7 backups mais recentes do host
+# Mantém somente a quantidade configurada de backups mais recentes
 find "$DEST" \
     -maxdepth 1 \
     -type f \
     -name 'pve01-config-*.tar.gz' \
     -printf '%T@ %p\n' \
     | sort -nr \
-    | tail -n +8 \
+    | tail -n "+$((KEEP_BACKUPS + 1))" \
     | cut -d' ' -f2- \
     | xargs -r rm -f
 

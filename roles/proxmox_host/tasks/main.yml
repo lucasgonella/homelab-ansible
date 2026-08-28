@@ -44,9 +44,10 @@
     name: zabbix-agent2
     state: started
     enabled: true
+
 - name: Instalar script de backup da configuracao do Proxmox
-  ansible.builtin.copy:
-    src: backup-pve01-config.sh
+  ansible.builtin.template:
+    src: backup-pve01-config.sh.j2
     dest: /usr/local/sbin/backup-pve01-config.sh
     owner: root
     group: root
