@@ -18,14 +18,14 @@
   ansible.builtin.lineinfile:
     path: /etc/zabbix/zabbix_agent2.conf
     regexp: '^ServerActive='
-    line: "ServerActive={{ zabbix_server }}"
+    line: "ServerActive={{ zabbix_server_active }}"
   notify: Restart Zabbix Agent 2
 
 - name: Configurar hostname do Agent
   ansible.builtin.lineinfile:
     path: /etc/zabbix/zabbix_agent2.conf
     regexp: '^Hostname='
-    line: "Hostname={{ inventory_hostname }}"
+    line: "Hostname={{ zabbix_agent_hostname }}"
   notify: Restart Zabbix Agent 2
 
 - name: Garantir Zabbix Agent 2 ativo
