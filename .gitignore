@@ -1,6 +1,35 @@
+# Ansible/runtime
 *.retry
 *.log
-.vault_pass
+.vault_pass*
+
+# Secrets and credentials
+inventory/group_vars/all/vault.yml
+secrets.yml
+secrets*.yml
+credentials*
 *.key
 *.pem
-secrets.yml
+*.p12
+*.pfx
+*.jks
+.env
+.env.*
+!.env.example
+
+# Local/runtime data and exports
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+*.dump
+*.bak
+*.backup
+*.tar
+*.tar.gz
+
+# Editor / OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
