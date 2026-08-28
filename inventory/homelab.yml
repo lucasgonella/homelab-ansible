@@ -10,6 +10,9 @@ all:
         pihole:
           ansible_host: 192.168.1.10
 
+        runner01:
+          ansible_host: 192.168.1.111
+
     proxmox:
       hosts:
 
