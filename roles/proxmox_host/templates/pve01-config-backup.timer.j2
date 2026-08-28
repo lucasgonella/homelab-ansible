@@ -2,7 +2,7 @@
 Description=Backup diario da configuracao do pve01
 
 [Timer]
-OnCalendar=*-*-* 17:00:00
+OnCalendar=*-*-* {{ proxmox_config_backup_hour }}:{{ proxmox_config_backup_minute }}:00
 Persistent=true
 Unit=pve01-config-backup.service
 

@@ -61,12 +61,13 @@
     mode: '0644'
 
 - name: Instalar systemd timer do backup do Proxmox
-  ansible.builtin.copy:
-    src: pve01-config-backup.timer
+  ansible.builtin.template:
+    src: pve01-config-backup.timer.j2
     dest: /etc/systemd/system/pve01-config-backup.timer
     owner: root
     group: root
     mode: '0644'
+  notify: Restart Proxmox backup timer
 
 - name: Garantir timer de backup do Proxmox habilitado
   ansible.builtin.systemd:
