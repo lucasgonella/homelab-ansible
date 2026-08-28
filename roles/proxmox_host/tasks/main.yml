@@ -1,0 +1,46 @@
+---
+- name: Validar que o host e Proxmox VE
+  ansible.builtin.command:
+    cmd: pveversion
+  register: proxmox_version
+  changed_when: false
+
+- name: Exibir versao do Proxmox
+  ansible.builtin.debug:
+    var: proxmox_version.stdout
+
+- name: Garantir pacotes administrativos
+  ansible.builtin.apt:
+    name:
+      - curl
+      - jq
+      - rsync
+      - zabbix-agent2
+    state: present
+
+- name: Configurar servidor Zabbix
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/zabbix_agent2.conf
+    regexp: '^Server='
+    line: "Server={{ proxmox_zabbix_server }}"
+  notify: Restart Zabbix Agent 2
+
+- name: Configurar active checks do Zabbix
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/zabbix_agent2.conf
+    regexp: '^ServerActive='
+    line: "ServerActive={{ proxmox_zabbix_server }}"
+  notify: Restart Zabbix Agent 2
+
+- name: Configurar hostname do Zabbix Agent
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/zabbix_agent2.conf
+    regexp: '^Hostname='
+    line: "Hostname={{ inventory_hostname }}"
+  notify: Restart Zabbix Agent 2
+
+- name: Garantir Zabbix Agent 2 ativo
+  ansible.builtin.service:
+    name: zabbix-agent2
+    state: started
+    enabled: true

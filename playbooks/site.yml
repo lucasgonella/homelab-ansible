@@ -13,3 +13,10 @@
 
   roles:
     - ansible_control_node
+
+- name: Proxmox Host - Gonella HomeLab
+  hosts: proxmox
+  become: true
+
+  roles:
+    - proxmox_host
