@@ -1,10 +1,10 @@
 # Gonella HomeLab — Ansible
 
-Repositório de **Configuration Management** do Gonella HomeLab usando Ansible.
+Repositório de **Configuration Management** do meu HomeLab usando Ansible.
 
-O objetivo deste projeto é manter a configuração dos hosts do laboratório de forma **reproduzível, idempotente, versionada e auditável**, reduzindo alterações manuais e permitindo reconstruir o padrão do ambiente a partir do Git.
+O objetivo do projeto é estudar e aplicar práticas de SysAdmin/DevOps mantendo a configuração do laboratório de forma **reproduzível, idempotente, versionada e auditável**.
 
-> O repositório é privado e não deve receber senhas, chaves privadas, tokens, webhooks ou outras credenciais em texto puro.
+> Este repositório foi preparado para visualização pública. Ele contém código e documentação de infraestrutura, mas não deve conter credenciais, backups, bancos de dados, histórico de consultas DNS ou outros dados pessoais de runtime.
 
 ## Visão geral
 
@@ -18,34 +18,52 @@ flowchart TD
     R --> S[myspeed\n192.168.1.28]
     R --> PV[pve01 / Proxmox VE\n192.168.1.101]
 
-    PV --> B[Backup de configuração\n/mnt/pve/backup-desktop/host-config]
+    PV --> B[Backup de configuração\nstorage externo ao Proxmox]
 ```
 
-O `runner01` é o nó de controle. Os demais hosts são acessados via SSH usando uma conta dedicada `ansible`, chave ED25519 e `sudo` sem senha para a automação.
+Os endereços mostrados são **RFC1918 privados** e representam a topologia lógica do laboratório. Eles não são endereços públicos acessíveis pela Internet.
+
+O `runner01` é o nó de controle Ansible. Os hosts são acessados via SSH usando uma conta dedicada `ansible`, chave ED25519 e `sudo` para as tarefas privilegiadas.
 
 ## Hosts gerenciados
 
-| Host | IP | Grupo(s) | Função |
+| Host | IP privado | Grupo(s) | Função |
 | --- | --- | --- | --- |
 | `runner01` | `192.168.1.111` | `managed_linux`, `ansible_control` | Ansible Control Node |
-| `app01` | `192.168.1.110` | `managed_linux` | Servidor Linux de aplicações/laboratório |
+| `app01` | `192.168.1.110` | `managed_linux` | Servidor Linux de laboratório |
 | `pihole` | `192.168.1.10` | `managed_linux` | Pi-hole + Unbound / DNS interno |
 | `monitor01` | `192.168.1.150` | `managed_linux` | Zabbix Server |
-| `myspeed` | `192.168.1.28` | `managed_linux` | MySpeed para medições de download/upload |
+| `myspeed` | `192.168.1.28` | `managed_linux` | Medições de download/upload |
 | `pve01` | `192.168.1.101` | `proxmox` | Proxmox VE |
 
-Estado atual validado do `site.yml`: todos os hosts acima executam de forma idempotente, com `changed=0`, `unreachable=0` e `failed=0` após convergência.
+Após convergência, o `site.yml` foi validado com todos esses hosts em `changed=0`, `unreachable=0` e `failed=0`.
+
+## O que este repositório não contém
+
+Por desenho, este projeto **não versiona**:
+
+- histórico/query log do Pi-hole;
+- domínios/sites consultados pelos dispositivos da rede;
+- bancos de dados do Pi-hole ou Zabbix;
+- backups do Proxmox;
+- conteúdo da CA interna ou chaves privadas;
+- senhas, tokens, webhooks ou credenciais;
+- arquivos de ambiente com dados confidenciais;
+- o Vault real do ambiente.
+
+A política está detalhada em [`SECURITY.md`](SECURITY.md).
 
 ## Estrutura do repositório
 
 ```text
 homelab-ansible/
 ├── ansible.cfg
+├── SECURITY.md
 ├── inventory/
 │   ├── homelab.yml
 │   ├── group_vars/
 │   │   ├── all/
-│   │   │   └── vault.yml
+│   │   │   └── vault.example.yml
 │   │   ├── managed_linux.yml
 │   │   └── proxmox.yml
 │   └── host_vars/
@@ -62,7 +80,11 @@ homelab-ansible/
 
 ## Inventário e grupos
 
-O inventário principal está em `inventory/homelab.yml`.
+O inventário principal fica em:
+
+```text
+inventory/homelab.yml
+```
 
 ### `managed_linux`
 
@@ -74,19 +96,25 @@ Aplica o padrão Linux compartilhado e o Zabbix Agent 2 em:
 - `monitor01`
 - `myspeed`
 
-As variáveis comuns de conexão ficam em `inventory/group_vars/managed_linux.yml`.
+As variáveis comuns de conexão ficam em `inventory/group_vars/managed_linux.yml`. O caminho da chave SSH é resolvido a partir de `$HOME`, evitando dependência de um nome de usuário pessoal no código.
 
 ### `ansible_control`
 
-Contém o `runner01` e aplica configurações exclusivas do nó de controle Ansible.
+Contém o `runner01` e aplica configurações exclusivas do nó de controle.
 
 ### `proxmox`
 
-Contém o `pve01` e recebe uma role própria para evitar aplicar indiscriminadamente o baseline dos servidores Linux comuns ao hypervisor.
+Contém o `pve01` e recebe uma role própria. O objetivo é evitar aplicar indiscriminadamente o baseline dos servidores Linux comuns ao hypervisor.
 
 ## Playbook principal
 
 O ponto de entrada do ambiente é:
+
+```bash
+ansible-playbook playbooks/site.yml
+```
+
+Se um Vault local estiver em uso:
 
 ```bash
 ansible-playbook playbooks/site.yml --ask-vault-pass
@@ -102,39 +130,35 @@ O `site.yml` aplica:
 
 ### `baseline_linux`
 
-Mantém o padrão base dos servidores Linux:
+Mantém um baseline simples para servidores Linux:
 
-- atualização do cache APT com validade;
-- pacotes administrativos básicos (`curl`, `wget`, `vim`, `htop`, `jq`, `rsync`, `net-tools`, `dnsutils`, `traceroute`, entre outros);
+- atualização controlada do cache APT;
+- pacotes administrativos básicos;
 - timezone `America/Sao_Paulo`;
 - serviço SSH habilitado e ativo.
+
+Entre os pacotes instalados estão `curl`, `wget`, `vim`, `htop`, `jq`, `rsync`, `net-tools`, `dnsutils` e `traceroute`.
 
 ### `zabbix_agent2`
 
 Responsável pelo Zabbix Agent 2:
 
-- garante que `zabbix-agent2` esteja instalado;
+- garante a instalação do `zabbix-agent2`;
 - configura `Server`;
 - configura `ServerActive`;
 - configura `Hostname`;
 - mantém o serviço habilitado e ativo;
-- reinicia o agent somente quando a configuração muda.
+- reinicia o agent somente quando necessário.
 
-Por padrão, o Zabbix Server utilizado é:
+O Zabbix Server do laboratório usa o endereço privado:
 
 ```text
 192.168.1.150
 ```
 
-O `monitor01`, por hospedar o próprio Zabbix Server, possui override específico em `inventory/host_vars/monitor01.yml`:
+Como o `monitor01` hospeda o próprio Zabbix Server, ele possui um override específico em `inventory/host_vars/monitor01.yml`.
 
-```yaml
-zabbix_server: "127.0.0.1"
-zabbix_server_active: "127.0.0.1"
-zabbix_agent_hostname: "Zabbix server"
-```
-
-A role também trata corretamente hosts novos em `--check`: antes de editar a configuração, verifica se `/etc/zabbix/zabbix_agent2.conf` já existe.
+A role também foi ajustada para funcionar corretamente com `--check` em hosts nos quais o arquivo de configuração ainda será criado pela instalação do pacote.
 
 ### `ansible_control_node`
 
@@ -147,8 +171,10 @@ Garante a presença das ferramentas necessárias ao control node, incluindo:
 - OpenSSH Client;
 - Python 3 / pip;
 - rsync, curl, wget e jq;
-- diretório SSH do usuário `gonella`;
-- diretório `/home/gonella/ansible`.
+- diretório SSH do usuário que executa o Ansible;
+- diretório do projeto.
+
+O usuário e o home do control node são resolvidos dinamicamente a partir do ambiente local, tornando a role mais portátil.
 
 ### `proxmox_host`
 
@@ -163,11 +189,11 @@ Responsabilidades atuais:
 - instala o service e o timer systemd do backup;
 - mantém o timer habilitado e ativo.
 
-A role **não gerencia automaticamente rede, storage ou cluster do Proxmox**. Esses componentes são mantidos fora da automação por segurança neste estágio do projeto.
+A role **não gerencia automaticamente rede, storage ou cluster do Proxmox** neste estágio do projeto.
 
-## Backup de configuração do Proxmox
+## Backup da configuração do Proxmox
 
-A role `proxmox_host` gerencia o backup do estado/configuração do `pve01`.
+A role `proxmox_host` gerencia a automação que cria um backup de configuração do `pve01` fora do próprio hypervisor.
 
 Defaults atuais:
 
@@ -179,28 +205,9 @@ proxmox_config_backup_subdir: "host-config"
 proxmox_config_backup_keep: 7
 ```
 
-O backup é executado diariamente por um timer systemd e gera arquivos no formato:
+O script coleta informações como inventário de VMs/LXCs, storage, rede, discos, pacotes e configurações importantes do host antes de gerar o arquivo compactado.
 
-```text
-pve01-config-YYYY-MM-DD_HH-MM.tar.gz
-```
-
-O script valida se o mount de backup está disponível antes de continuar e mantém somente a quantidade de arquivos definida em `proxmox_config_backup_keep`.
-
-O arquivo inclui, entre outros itens:
-
-- `/etc/pve`;
-- `/etc/network/interfaces`;
-- `/etc/hosts`;
-- `/etc/hostname`;
-- `/etc/resolv.conf`;
-- `/etc/zabbix`;
-- `/etc/apt`;
-- `/root/homelab-ca`;
-- inventário atual de VMs/LXCs, storage, rede, discos e pacotes;
-- cópia de `/var/lib/pve-cluster/config.db`.
-
-O fluxo automático já foi validado ponta a ponta:
+O fluxo foi validado ponta a ponta:
 
 ```text
 systemd timer
@@ -209,102 +216,89 @@ pve01-config-backup.service
     ↓
 backup-pve01-config.sh
     ↓
-/mnt/pve/backup-desktop/host-config
+storage externo
     ↓
 arquivo tar.gz
     ↓
 validação de integridade
 ```
 
-> Atenção: os backups do `pve01` possuem dados sensíveis, incluindo configuração do Proxmox e material da CA interna. O storage de backup deve ser tratado como dado privilegiado.
+**Os arquivos de backup não fazem parte deste repositório.** Eles podem conter material sensível e permanecem no storage de backup.
 
 ## Ansible Vault
 
-Segredos destinados ao Ansible devem ser armazenados criptografados com Ansible Vault.
+O Vault real não é versionado.
 
-Arquivo atualmente utilizado:
+O repositório mantém apenas:
 
 ```text
-inventory/group_vars/all/vault.yml
+inventory/group_vars/all/vault.example.yml
 ```
 
-Para visualizar:
+Para criar um Vault local:
 
 ```bash
-ansible-vault view inventory/group_vars/all/vault.yml
+cp inventory/group_vars/all/vault.example.yml \
+   inventory/group_vars/all/vault.yml
+
+ansible-vault encrypt inventory/group_vars/all/vault.yml
 ```
 
-Os comandos do projeto usam `--ask-vault-pass`, evitando armazenar a senha do Vault no repositório.
-
-Nunca versionar:
-
-- senha do Vault;
-- chave SSH privada;
-- chave privada da CA;
-- tokens de API;
-- credenciais SMB;
-- Discord webhook;
-- senhas em texto puro.
+O arquivo `vault.yml` está no `.gitignore` e deve permanecer apenas no ambiente local.
 
 ## Validações e operação
 
 ### Ver o inventário
 
 ```bash
-ansible-inventory --graph --ask-vault-pass
+ansible-inventory --graph
 ```
 
 ### Testar conectividade
 
 ```bash
-ansible managed_linux -m ping --ask-vault-pass
-ansible pve01 -m ping --ask-vault-pass
+ansible managed_linux -m ping
+ansible pve01 -m ping
 ```
 
 ### Validar sintaxe
 
 ```bash
-ansible-playbook playbooks/site.yml \
-  --syntax-check \
-  --ask-vault-pass
+ansible-playbook playbooks/site.yml --syntax-check
 ```
 
 ### Dry-run com diff
 
-Antes de aplicar mudanças relevantes:
+Antes de mudanças relevantes:
 
 ```bash
-ansible-playbook playbooks/site.yml \
-  --check \
-  --diff \
-  --ask-vault-pass
+ansible-playbook playbooks/site.yml --check --diff
 ```
 
-Também é possível limitar a execução a um host:
+Também é possível limitar a execução:
 
 ```bash
 ansible-playbook playbooks/site.yml \
   --limit monitor01 \
   --check \
-  --diff \
-  --ask-vault-pass
+  --diff
 ```
+
+Se o ambiente utiliza Vault, basta adicionar `--ask-vault-pass` aos comandos.
 
 ### Aplicar configuração
 
 ```bash
-ansible-playbook playbooks/site.yml --ask-vault-pass
+ansible-playbook playbooks/site.yml
 ```
 
 Uma segunda execução deve convergir para `changed=0` quando não houver drift.
 
 ## Detecção e correção de drift
 
-O projeto foi validado alterando intencionalmente a permissão de um arquivo gerenciado no `pve01`.
+O projeto foi testado alterando intencionalmente a permissão de um arquivo gerenciado no `pve01`.
 
-O Ansible detectou a divergência e restaurou automaticamente o estado definido pela role.
-
-Exemplo do conceito:
+Na execução seguinte, o Ansible detectou a divergência e restaurou o estado definido pela role:
 
 ```text
 estado desejado no Git
@@ -320,77 +314,86 @@ restaura o padrão
 
 ## Adicionando um novo host Linux
 
-Fluxo recomendado:
+Fluxo utilizado no laboratório:
 
 1. criar a conta dedicada `ansible`;
 2. instalar a chave pública do control node;
-3. conceder `sudo` via `/etc/sudoers.d/ansible`;
+3. conceder `sudo` para automação;
 4. adicionar o host a `inventory/homelab.yml`;
 5. testar `ansible <host> -m ping`;
 6. executar `site.yml --limit <host> --check --diff`;
 7. revisar as alterações;
 8. executar o playbook real;
-9. executar uma segunda vez e confirmar `changed=0`;
-10. versionar e enviar a mudança ao GitHub.
+9. executar novamente e confirmar `changed=0`;
+10. versionar a mudança.
 
-O playbook `playbooks/bootstrap-ansible.yml` contém a base para criação da conta de automação e instalação da chave SSH. Ele ainda pode ser generalizado para o onboarding de novos hosts.
+O `playbooks/bootstrap-ansible.yml` contém a base para criação da conta de automação e instalação da chave SSH.
 
 ## Segurança
 
-Princípios adotados neste projeto:
+Práticas adotadas:
 
-- repositório GitHub privado;
-- acesso SSH por chave dedicada para automação;
 - conta `ansible` separada das contas pessoais;
-- uso de `become`/sudo para tarefas privilegiadas;
-- Ansible Vault para segredos;
-- nenhuma chave privada armazenada no Git;
+- SSH por chave dedicada para automação;
+- `become`/sudo para tarefas privilegiadas;
+- segredos locais fora do Git;
+- `.gitignore` defensivo para credenciais e dados de runtime;
 - roles separadas por responsabilidade;
 - dry-run antes de mudanças sensíveis;
 - Proxmox isolado em role própria;
-- backups de configuração fora do host Proxmox.
+- backups fora do hypervisor e fora do repositório.
+
+Consulte [`SECURITY.md`](SECURITY.md) antes de adicionar novos tipos de arquivos ao projeto.
+
+## Pi-hole e privacidade
+
+O `pihole` é gerenciado apenas como um host Linux com Zabbix Agent neste repositório.
+
+**Não são exportados ou versionados** Query Log, histórico de DNS, domínios acessados, banco do Pi-hole ou qualquer registro de navegação dos dispositivos da rede.
 
 ## Monitoramento
 
 O Zabbix Server está no `monitor01` (`192.168.1.150`).
 
-Este repositório atualmente gerencia **o Zabbix Agent 2 e sua configuração nos hosts**. Objetos do Zabbix Server, como hosts, templates, triggers, dashboards e integrações de alerta, ainda não são tratados como código por este repositório.
+Este projeto gerencia o **Zabbix Agent 2** nos hosts. Objetos do Zabbix Server como templates, triggers, dashboards e integrações de alerta ainda não são Configuration-as-Code neste repositório.
 
-O `myspeed` é uma aplicação auxiliar para medir download/upload da rede; não há necessidade atual de criar uma camada complexa de monitoramento específico para ela.
+O `myspeed` é apenas uma aplicação auxiliar para medições de upload/download da rede.
 
 ## Git workflow
 
-Fluxo sugerido para mudanças:
+Fluxo sugerido:
 
 ```bash
 git checkout -b feature/minha-alteracao
 
 # editar e validar
-ansible-playbook playbooks/site.yml --syntax-check --ask-vault-pass
-ansible-playbook playbooks/site.yml --check --diff --ask-vault-pass
+ansible-playbook playbooks/site.yml --syntax-check
+ansible-playbook playbooks/site.yml --check --diff
 
 git add -A
+git diff --cached
 git commit -m "Descrição da alteração"
 git push -u origin feature/minha-alteracao
 ```
 
-A mudança pode então ser revisada e integrada à `main` através de Pull Request.
+A mudança pode então ser revisada e integrada à `main` via Pull Request.
 
 ## Roadmap
 
-Próximas evoluções naturais do projeto:
+Próximas evoluções:
 
 - `ansible-lint`;
 - GitHub Actions para syntax-check/lint em Pull Requests;
+- secret scanning automatizado;
 - generalizar o bootstrap de novos hosts;
 - ampliar o uso de variáveis e templates;
-- automatizar verificações periódicas de integridade dos backups;
-- avaliar Zabbix configuration-as-code para hosts/triggers/templates;
-- documentar procedimento completo de Disaster Recovery do HomeLab.
+- verificações periódicas de integridade dos backups;
+- avaliar Zabbix Configuration-as-Code;
+- documentar um procedimento completo de Disaster Recovery do HomeLab.
 
-## Estado do projeto
+## Estado atual
 
-A base atual já entrega:
+A base do projeto já entrega:
 
 - inventário centralizado;
 - cinco hosts Linux gerenciados;
@@ -400,8 +403,8 @@ A base atual já entrega:
 - Zabbix Agent padronizado;
 - Ansible Control Node gerenciado pelo próprio Ansible;
 - backup automático do Proxmox gerenciado como código;
-- Ansible Vault;
-- versionamento remoto privado no GitHub.
+- estrutura preparada para uso local de Ansible Vault;
+- Git workflow com Pull Requests.
 
 ---
 

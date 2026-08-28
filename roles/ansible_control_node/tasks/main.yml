@@ -14,18 +14,18 @@
     state: present
     update_cache: true
 
-- name: Garantir diretorio SSH do usuario gonella
+- name: Garantir diretorio SSH do usuario do control node
   ansible.builtin.file:
-    path: /home/gonella/.ssh
+    path: "{{ ansible_control_home }}/.ssh"
     state: directory
-    owner: gonella
-    group: gonella
+    owner: "{{ ansible_control_user }}"
+    group: "{{ ansible_control_user }}"
     mode: '0700'
 
 - name: Garantir diretorio do projeto Ansible
   ansible.builtin.file:
-    path: /home/gonella/ansible
+    path: "{{ ansible_control_project_dir }}"
     state: directory
-    owner: gonella
-    group: gonella
+    owner: "{{ ansible_control_user }}"
+    group: "{{ ansible_control_user }}"
     mode: '0755'
