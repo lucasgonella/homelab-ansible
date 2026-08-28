@@ -6,3 +6,10 @@
   roles:
     - baseline_linux
     - zabbix_agent2
+
+- name: Ansible Control Node - Gonella HomeLab
+  hosts: ansible_control
+  become: true
+
+  roles:
+    - ansible_control_node
