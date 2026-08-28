@@ -1,0 +1,34 @@
+---
+#SPDX-License-Identifier: MIT-0
+# tasks file for roles/baseline_linux
+- name: Atualizar cache do APT
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Instalar pacotes basicos
+  ansible.builtin.apt:
+    name:
+      - curl
+      - wget
+      - vim
+      - htop
+      - jq
+      - unzip
+      - ca-certificates
+      - gnupg
+      - rsync
+      - net-tools
+      - dnsutils
+      - traceroute
+    state: present
+
+- name: Configurar timezone
+  community.general.timezone:
+    name: America/Sao_Paulo
+
+- name: Garantir SSH ativo
+  ansible.builtin.service:
+    name: ssh
+    state: started
+    enabled: true

@@ -1,3 +1,8 @@
 ---
-- import_playbook: baseline-linux.yml
-- import_playbook: zabbix-agent2.yml
+- name: Padrao Linux - Gonella HomeLab
+  hosts: managed_linux
+  become: true
+
+  roles:
+    - baseline_linux
+    - zabbix_agent2

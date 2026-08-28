@@ -1,0 +1,7 @@
+---
+#SPDX-License-Identifier: MIT-0
+# handlers file for roles/zabbix_agent2
+- name: Restart Zabbix Agent 2
+  ansible.builtin.service:
+    name: zabbix-agent2
+    state: restarted
