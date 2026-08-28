@@ -44,3 +44,33 @@
     name: zabbix-agent2
     state: started
     enabled: true
+- name: Instalar script de backup da configuracao do Proxmox
+  ansible.builtin.copy:
+    src: backup-pve01-config.sh
+    dest: /usr/local/sbin/backup-pve01-config.sh
+    owner: root
+    group: root
+    mode: '0700'
+
+- name: Instalar systemd service do backup do Proxmox
+  ansible.builtin.copy:
+    src: pve01-config-backup.service
+    dest: /etc/systemd/system/pve01-config-backup.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Instalar systemd timer do backup do Proxmox
+  ansible.builtin.copy:
+    src: pve01-config-backup.timer
+    dest: /etc/systemd/system/pve01-config-backup.timer
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Garantir timer de backup do Proxmox habilitado
+  ansible.builtin.systemd:
+    name: pve01-config-backup.timer
+    enabled: true
+    state: started
+    daemon_reload: true

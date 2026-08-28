@@ -1,0 +1,7 @@
+[Unit]
+Description=Backup da configuracao do pve01
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/backup-pve01-config.sh
