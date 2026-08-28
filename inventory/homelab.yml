@@ -15,6 +15,9 @@ all:
         monitor01:
           ansible_host: 192.168.1.150
 
+        myspeed:
+          ansible_host: 192.168.1.28
+
     ansible_control:
       hosts:
         runner01:
