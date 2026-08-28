@@ -1,3 +1,4 @@
-#SPDX-License-Identifier: MIT-0
 ---
-# defaults file for roles/ansible_control_node
+ansible_control_user: "{{ lookup('env', 'USER') }}"
+ansible_control_home: "{{ lookup('env', 'HOME') }}"
+ansible_control_project_dir: "{{ ansible_control_home }}/ansible"
