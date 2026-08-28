@@ -1,0 +1,15 @@
+---
+# Public-safe example only.
+#
+# Copy this file to vault.yml, add only the secrets required by your
+# environment, then encrypt the local file before use:
+#
+#   cp inventory/group_vars/all/vault.example.yml \
+#      inventory/group_vars/all/vault.yml
+#   ansible-vault encrypt inventory/group_vars/all/vault.yml
+#
+# inventory/group_vars/all/vault.yml is ignored by Git and must never be
+# committed, even when encrypted.
+
+# Example:
+# vault_example_secret: "replace-me"
