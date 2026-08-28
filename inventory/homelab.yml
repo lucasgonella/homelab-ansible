@@ -1,0 +1,19 @@
+all:
+  children:
+
+    managed_linux:
+      hosts:
+        app01:
+          ansible_host: 192.168.1.110
+          ansible_user: ansible
+          ansible_ssh_private_key_file: /home/gonella/.ssh/ansible_ed25519
+
+    linux:
+      hosts:
+        pihole:
+          ansible_host: 192.168.1.10
+
+    proxmox:
+      hosts:
+        pve01:
+          ansible_host: 192.168.1.101

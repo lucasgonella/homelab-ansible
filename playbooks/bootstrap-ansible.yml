@@ -1,0 +1,33 @@
+---
+- name: Bootstrap do usuario Ansible
+  hosts: app01
+  become: true
+
+  vars:
+    automation_user: ansible
+    automation_pubkey: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/ansible_ed25519.pub') }}"
+
+  tasks:
+    - name: Criar usuario ansible
+      ansible.builtin.user:
+        name: "{{ automation_user }}"
+        shell: /bin/bash
+        create_home: true
+        groups: sudo
+        append: true
+        state: present
+
+    - name: Instalar chave SSH do Ansible
+      ansible.posix.authorized_key:
+        user: "{{ automation_user }}"
+        key: "{{ automation_pubkey }}"
+        state: present
+
+    - name: Permitir sudo sem senha para automacao
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/ansible
+        content: "ansible ALL=(ALL) NOPASSWD: ALL\n"
+        owner: root
+        group: root
+        mode: "0440"
+        validate: "/usr/sbin/visudo -cf %s"

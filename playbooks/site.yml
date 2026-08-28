@@ -1,0 +1,3 @@
+---
+- import_playbook: baseline-linux.yml
+- import_playbook: zabbix-agent2.yml

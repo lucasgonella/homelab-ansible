@@ -1,0 +1,7 @@
+*.retry
+*.log
+.vault_pass
+*.key
+*.pem
+secrets.yml
+vault.yml
