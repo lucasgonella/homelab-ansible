@@ -1,0 +1,61 @@
+---
+homelab_network:
+  network: "192.168.1.0/24"
+  gateway: "192.168.1.254"
+  dns: "192.168.1.10"
+  domain: "gonella.home"
+  dhcp_start: "192.168.1.20"
+
+homelab_hosts:
+  pihole:
+    ip: "192.168.1.10"
+
+  pve01:
+    ip: "192.168.1.11"
+
+  monitor01:
+    ip: "192.168.1.12"
+
+  myspeed:
+    ip: "192.168.1.13"
+
+  app01:
+    ip: "192.168.1.14"
+
+  runner01:
+    ip: "192.168.1.15"
+
+  labs:
+    ip: "192.168.1.16"
+    status: "reserved"
+
+homelab_dns_records:
+  - ip: "{{ homelab_hosts.pihole.ip }}"
+    hostname: "pihole.gonella.home"
+
+  - ip: "{{ homelab_hosts.pve01.ip }}"
+    hostname: "pve01.gonella.home"
+
+  - ip: "{{ homelab_hosts.monitor01.ip }}"
+    hostname: "monitor01.gonella.home"
+
+  - ip: "{{ homelab_hosts.monitor01.ip }}"
+    hostname: "zabbix.gonella.home"
+
+  - ip: "{{ homelab_hosts.myspeed.ip }}"
+    hostname: "myspeed.gonella.home"
+
+  - ip: "{{ homelab_hosts.app01.ip }}"
+    hostname: "app01.gonella.home"
+
+  - ip: "{{ homelab_hosts.runner01.ip }}"
+    hostname: "runner01.gonella.home"
+
+  - ip: "192.168.1.26"
+    hostname: "iphonegonella.gonella.home"
+
+  - ip: "{{ homelab_network.gateway }}"
+    hostname: "fiberhome.gonella.home"
+
+  - ip: "192.168.3.1"
+    hostname: "huawei.gonella.home"

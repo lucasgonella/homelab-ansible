@@ -4,19 +4,19 @@ all:
     managed_linux:
       hosts:
         app01:
-          ansible_host: 192.168.1.110
+          ansible_host: 192.168.1.14
 
         pihole:
           ansible_host: 192.168.1.10
 
         runner01:
-          ansible_host: 192.168.1.111
+          ansible_host: 192.168.1.15
 
         monitor01:
-          ansible_host: 192.168.1.150
+          ansible_host: 192.168.1.12
 
         myspeed:
-          ansible_host: 192.168.1.28
+          ansible_host: 192.168.1.13
 
     ansible_control:
       hosts:
@@ -25,4 +25,4 @@ all:
     proxmox:
       hosts:
         pve01:
-          ansible_host: 192.168.1.101
+          ansible_host: 192.168.1.11
