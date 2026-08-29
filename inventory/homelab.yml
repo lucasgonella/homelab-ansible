@@ -10,7 +10,7 @@ all:
           ansible_host: 192.168.1.10
 
         runner01:
-          ansible_host: 192.168.1.111
+          ansible_host: 192.168.1.15
 
         monitor01:
           ansible_host: 192.168.1.12
