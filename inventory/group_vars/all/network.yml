@@ -34,3 +34,34 @@ homelab_ip_plan:
   labs:
     current_ip: "192.168.1.88"
     new_ip: "192.168.1.16"
+
+homelab_dns_records:
+  - ip: "{{ homelab_ip_plan.pihole.new_ip }}"
+    hostname: "pihole.gonella.home"
+
+  - ip: "{{ homelab_ip_plan.pve01.new_ip }}"
+    hostname: "pve01.gonella.home"
+
+  - ip: "{{ homelab_ip_plan.monitor01.new_ip }}"
+    hostname: "monitor01.gonella.home"
+
+  - ip: "{{ homelab_ip_plan.monitor01.new_ip }}"
+    hostname: "zabbix.gonella.home"
+
+  - ip: "{{ homelab_ip_plan.myspeed.new_ip }}"
+    hostname: "myspeed.gonella.home"
+
+  - ip: "{{ homelab_ip_plan.app01.new_ip }}"
+    hostname: "app01.gonella.home"
+
+  - ip: "{{ homelab_ip_plan.runner01.new_ip }}"
+    hostname: "runner01.gonella.home"
+
+  - ip: "192.168.1.26"
+    hostname: "iphonegonella.gonella.home"
+
+  - ip: "192.168.1.254"
+    hostname: "fiberhome.gonella.home"
+
+  - ip: "192.168.3.1"
+    hostname: "huawei.gonella.home"
