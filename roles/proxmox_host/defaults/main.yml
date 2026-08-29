@@ -1,5 +1,5 @@
 ---
-proxmox_zabbix_server: "192.168.1.150"
+proxmox_zabbix_server: "{{ homelab_ip_plan.monitor01.new_ip }}"
 
 proxmox_config_backup_hour: "17"
 proxmox_config_backup_minute: "00"
