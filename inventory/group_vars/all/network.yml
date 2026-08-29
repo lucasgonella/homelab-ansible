@@ -1,0 +1,36 @@
+---
+homelab_network:
+  network: "192.168.1.0/24"
+  gateway: "192.168.1.254"
+  dns: "192.168.1.10"
+  domain: "gonella.home"
+  dhcp_start: "192.168.1.20"
+
+homelab_ip_plan:
+  pihole:
+    current_ip: "192.168.1.10"
+    new_ip: "192.168.1.10"
+
+  pve01:
+    current_ip: "192.168.1.101"
+    new_ip: "192.168.1.11"
+
+  monitor01:
+    current_ip: "192.168.1.150"
+    new_ip: "192.168.1.12"
+
+  myspeed:
+    current_ip: "192.168.1.28"
+    new_ip: "192.168.1.13"
+
+  app01:
+    current_ip: "192.168.1.110"
+    new_ip: "192.168.1.14"
+
+  runner01:
+    current_ip: "192.168.1.111"
+    new_ip: "192.168.1.15"
+
+  labs:
+    current_ip: "192.168.1.88"
+    new_ip: "192.168.1.16"
