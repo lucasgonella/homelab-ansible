@@ -1,0 +1,63 @@
+---
+- name: Validar que os registros DNS foram definidos
+  ansible.builtin.assert:
+    that:
+      - homelab_dns_records is defined
+      - homelab_dns_records | length > 0
+    fail_msg: "homelab_dns_records não está definido ou está vazio."
+
+- name: Montar lista desejada de registros DNS
+  ansible.builtin.set_fact:
+    pihole_dns_desired_records: >-
+      {{
+        (pihole_dns_desired_records | default([]))
+        + [item.ip ~ ' ' ~ item.hostname]
+      }}
+  loop: "{{ homelab_dns_records }}"
+  loop_control:
+    label: "{{ item.hostname }} -> {{ item.ip }}"
+
+- name: Montar representação esperada da configuração
+  ansible.builtin.set_fact:
+    pihole_dns_desired_display: >-
+      [ {{ pihole_dns_desired_records | join(', ') }} ]
+
+- name: Consultar registros DNS atuais do Pi-hole
+  ansible.builtin.command:
+    argv:
+      - pihole-FTL
+      - --config
+      - dns.hosts
+  register: pihole_dns_current
+  changed_when: false
+  check_mode: false
+
+- name: Sincronizar registros DNS do Pi-hole
+  ansible.builtin.command:
+    argv:
+      - pihole-FTL
+      - --config
+      - dns.hosts
+      - "{{ pihole_dns_desired_records | to_json }}"
+  when: pihole_dns_current.stdout | trim != pihole_dns_desired_display | trim
+  register: pihole_dns_update
+  changed_when: true
+
+- name: Consultar configuração após sincronização
+  ansible.builtin.command:
+    argv:
+      - pihole-FTL
+      - --config
+      - dns.hosts
+  register: pihole_dns_final
+  changed_when: false
+  check_mode: false
+
+- name: Validar configuração DNS final
+  ansible.builtin.assert:
+    that:
+      - pihole_dns_final.stdout | trim == pihole_dns_desired_display | trim
+    fail_msg: >-
+      A configuração dns.hosts do Pi-hole não corresponde
+      ao estado declarado no Ansible.
+    success_msg: "Registros DNS do Pi-hole estão sincronizados com o Ansible."

@@ -20,3 +20,10 @@
 
   roles:
     - proxmox_host
+
+- name: Pi-hole DNS - Gonella HomeLab
+  hosts: pihole
+  become: true
+
+  roles:
+    - pihole_dns
