@@ -4,7 +4,7 @@ all:
     managed_linux:
       hosts:
         app01:
-          ansible_host: 192.168.1.110
+          ansible_host: 192.168.1.14
 
         pihole:
           ansible_host: 192.168.1.10
