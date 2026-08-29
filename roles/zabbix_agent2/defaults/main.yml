@@ -1,6 +1,6 @@
 ---
 #SPDX-License-Identifier: MIT-0
 # defaults file for roles/zabbix_agent2
-zabbix_server: "{{ homelab_ip_plan.monitor01.new_ip }}"
+zabbix_server: "{{ homelab_hosts.monitor01.ip }}"
 zabbix_server_active: "{{ zabbix_server }}"
 zabbix_agent_hostname: "{{ inventory_hostname }}"

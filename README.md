@@ -10,13 +10,13 @@ O objetivo do projeto é estudar e aplicar práticas de SysAdmin/DevOps mantendo
 
 ```mermaid
 flowchart TD
-    GH[GitHub\nhomelab-ansible] --> R[runner01\nAnsible Control Node\n192.168.1.111]
+    GH[GitHub\nhomelab-ansible] --> R[runner01\nAnsible Control Node\n192.168.1.15]
 
-    R --> A[app01\n192.168.1.110]
+    R --> A[app01\n192.168.1.14]
     R --> P[pihole\n192.168.1.10]
-    R --> M[monitor01 / Zabbix\n192.168.1.150]
-    R --> S[myspeed\n192.168.1.28]
-    R --> PV[pve01 / Proxmox VE\n192.168.1.101]
+    R --> M[monitor01 / Zabbix\n192.168.1.12]
+    R --> S[myspeed\n192.168.1.13]
+    R --> PV[pve01 / Proxmox VE\n192.168.1.11]
 
     PV --> B[Backup de configuração\nstorage externo ao Proxmox]
 ```
@@ -29,12 +29,12 @@ O `runner01` é o nó de controle Ansible. Os hosts são acessados via SSH usand
 
 | Host | IP privado | Grupo(s) | Função |
 | --- | --- | --- | --- |
-| `runner01` | `192.168.1.111` | `managed_linux`, `ansible_control` | Ansible Control Node |
-| `app01` | `192.168.1.110` | `managed_linux` | Servidor Linux de laboratório |
+| `runner01` | `192.168.1.15` | `managed_linux`, `ansible_control` | Ansible Control Node |
+| `app01` | `192.168.1.14` | `managed_linux` | Servidor Linux de laboratório |
 | `pihole` | `192.168.1.10` | `managed_linux` | Pi-hole + Unbound / DNS interno |
-| `monitor01` | `192.168.1.150` | `managed_linux` | Zabbix Server |
-| `myspeed` | `192.168.1.28` | `managed_linux` | Medições de download/upload |
-| `pve01` | `192.168.1.101` | `proxmox` | Proxmox VE |
+| `monitor01` | `192.168.1.12` | `managed_linux` | Zabbix Server |
+| `myspeed` | `192.168.1.13` | `managed_linux` | Medições de download/upload |
+| `pve01` | `192.168.1.11` | `proxmox` | Proxmox VE |
 
 Após convergência, o `site.yml` foi validado com todos esses hosts em `changed=0`, `unreachable=0` e `failed=0`.
 
@@ -153,7 +153,7 @@ Responsável pelo Zabbix Agent 2:
 O Zabbix Server do laboratório usa o endereço privado:
 
 ```text
-192.168.1.150
+192.168.1.12
 ```
 
 Como o `monitor01` hospeda o próprio Zabbix Server, ele possui um override específico em `inventory/host_vars/monitor01.yml`.
@@ -353,7 +353,7 @@ O `pihole` é gerenciado apenas como um host Linux com Zabbix Agent neste reposi
 
 ## Monitoramento
 
-O Zabbix Server está no `monitor01` (`192.168.1.150`).
+O Zabbix Server está no `monitor01` (`192.168.1.12`).
 
 Este projeto gerencia o **Zabbix Agent 2** nos hosts. Objetos do Zabbix Server como templates, triggers, dashboards e integrações de alerta ainda não são Configuration-as-Code neste repositório.
 

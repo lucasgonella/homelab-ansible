@@ -6,61 +6,55 @@ homelab_network:
   domain: "gonella.home"
   dhcp_start: "192.168.1.20"
 
-homelab_ip_plan:
+homelab_hosts:
   pihole:
-    current_ip: "192.168.1.10"
-    new_ip: "192.168.1.10"
+    ip: "192.168.1.10"
 
   pve01:
-    current_ip: "192.168.1.101"
-    new_ip: "192.168.1.11"
+    ip: "192.168.1.11"
 
   monitor01:
-    current_ip: "192.168.1.150"
-    new_ip: "192.168.1.12"
+    ip: "192.168.1.12"
 
   myspeed:
-    current_ip: "192.168.1.28"
-    new_ip: "192.168.1.13"
+    ip: "192.168.1.13"
 
   app01:
-    current_ip: "192.168.1.110"
-    new_ip: "192.168.1.14"
+    ip: "192.168.1.14"
 
   runner01:
-    current_ip: "192.168.1.111"
-    new_ip: "192.168.1.15"
+    ip: "192.168.1.15"
 
   labs:
-    current_ip: "192.168.1.88"
-    new_ip: "192.168.1.16"
+    ip: "192.168.1.16"
+    status: "reserved"
 
 homelab_dns_records:
-  - ip: "{{ homelab_ip_plan.pihole.new_ip }}"
+  - ip: "{{ homelab_hosts.pihole.ip }}"
     hostname: "pihole.gonella.home"
 
-  - ip: "{{ homelab_ip_plan.pve01.new_ip }}"
+  - ip: "{{ homelab_hosts.pve01.ip }}"
     hostname: "pve01.gonella.home"
 
-  - ip: "{{ homelab_ip_plan.monitor01.new_ip }}"
+  - ip: "{{ homelab_hosts.monitor01.ip }}"
     hostname: "monitor01.gonella.home"
 
-  - ip: "{{ homelab_ip_plan.monitor01.new_ip }}"
+  - ip: "{{ homelab_hosts.monitor01.ip }}"
     hostname: "zabbix.gonella.home"
 
-  - ip: "{{ homelab_ip_plan.myspeed.new_ip }}"
+  - ip: "{{ homelab_hosts.myspeed.ip }}"
     hostname: "myspeed.gonella.home"
 
-  - ip: "{{ homelab_ip_plan.app01.new_ip }}"
+  - ip: "{{ homelab_hosts.app01.ip }}"
     hostname: "app01.gonella.home"
 
-  - ip: "{{ homelab_ip_plan.runner01.new_ip }}"
+  - ip: "{{ homelab_hosts.runner01.ip }}"
     hostname: "runner01.gonella.home"
 
   - ip: "192.168.1.26"
     hostname: "iphonegonella.gonella.home"
 
-  - ip: "192.168.1.254"
+  - ip: "{{ homelab_network.gateway }}"
     hostname: "fiberhome.gonella.home"
 
   - ip: "192.168.3.1"
