@@ -1,11 +1,13 @@
 ---
 proxmox_zabbix_server: "{{ homelab_hosts.monitor01.ip }}"
 
-proxmox_config_backup_enabled: "{{ inventory_hostname == 'pve01' }}"
+# Legacy mount-based host configuration backup. Disabled by default.
+# The definitive backup architecture is defined in inventory/group_vars/all/backup.yml.
+proxmox_config_backup_enabled: false
 
 proxmox_config_backup_hour: "17"
 proxmox_config_backup_minute: "00"
 
-proxmox_config_backup_mount: "/mnt/pve/backup-desktop"
+proxmox_config_backup_mount: "/mnt/pve/backup"
 proxmox_config_backup_subdir: "host-config"
 proxmox_config_backup_keep: 7
