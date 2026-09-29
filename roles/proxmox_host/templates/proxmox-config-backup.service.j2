@@ -1,0 +1,7 @@
+[Unit]
+Description=Backup da configuracao do {{ inventory_hostname }}
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/backup-{{ inventory_hostname }}-config.sh

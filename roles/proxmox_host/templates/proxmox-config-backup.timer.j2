@@ -1,10 +1,10 @@
 [Unit]
-Description=Backup diario da configuracao do pve01
+Description=Backup diario da configuracao do {{ inventory_hostname }}
 
 [Timer]
 OnCalendar=*-*-* {{ proxmox_config_backup_hour }}:{{ proxmox_config_backup_minute }}:00
 Persistent=true
-Unit=pve01-config-backup.service
+Unit={{ inventory_hostname }}-config-backup.service
 
 [Install]
 WantedBy=timers.target

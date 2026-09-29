@@ -6,6 +6,6 @@
 
 - name: Restart Proxmox backup timer
   ansible.builtin.systemd:
-    name: pve01-config-backup.timer
+    name: "{{ inventory_hostname }}-config-backup.timer"
     state: restarted
     daemon_reload: true

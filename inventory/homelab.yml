@@ -24,8 +24,10 @@ all:
 
     proxmox:
       hosts:
-        pve01:
-          ansible_host: 192.168.1.11
-
         pve02:
           ansible_host: 192.168.1.18
+
+    proxmox_rollback:
+      hosts:
+        pve01:
+          ansible_host: 192.168.1.11

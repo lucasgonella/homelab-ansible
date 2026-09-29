@@ -57,17 +57,17 @@
 
 - name: Instalar script de backup da configuracao do Proxmox
   ansible.builtin.template:
-    src: backup-pve01-config.sh.j2
-    dest: /usr/local/sbin/backup-pve01-config.sh
+    src: backup-proxmox-config.sh.j2
+    dest: "/usr/local/sbin/backup-{{ inventory_hostname }}-config.sh"
     owner: root
     group: root
     mode: '0700'
   when: proxmox_config_backup_enabled | bool
 
 - name: Instalar systemd service do backup do Proxmox
-  ansible.builtin.copy:
-    src: pve01-config-backup.service
-    dest: /etc/systemd/system/pve01-config-backup.service
+  ansible.builtin.template:
+    src: proxmox-config-backup.service.j2
+    dest: "/etc/systemd/system/{{ inventory_hostname }}-config-backup.service"
     owner: root
     group: root
     mode: '0644'
@@ -75,8 +75,8 @@
 
 - name: Instalar systemd timer do backup do Proxmox
   ansible.builtin.template:
-    src: pve01-config-backup.timer.j2
-    dest: /etc/systemd/system/pve01-config-backup.timer
+    src: proxmox-config-backup.timer.j2
+    dest: "/etc/systemd/system/{{ inventory_hostname }}-config-backup.timer"
     owner: root
     group: root
     mode: '0644'
@@ -85,7 +85,7 @@
 
 - name: Garantir timer de backup do Proxmox habilitado
   ansible.builtin.systemd:
-    name: pve01-config-backup.timer
+    name: "{{ inventory_hostname }}-config-backup.timer"
     enabled: true
     state: started
     daemon_reload: true
