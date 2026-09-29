@@ -1,0 +1,38 @@
+---
+homelab_backup:
+  primary_hypervisor: "pve02"
+
+  backup_target:
+    current_host: "pve01"
+    future_hostname: "pbs01"
+    ip: "{{ homelab_hosts.pve01.ip }}"
+    platform: "proxmox_backup_server"
+    status: "planned_after_rollback_window"
+    datastore: "homelab"
+
+  pve_storage_id: "pbs-homelab"
+  guest_selection: "all"
+  backup_mode: "snapshot"
+  schedule: "02:00"
+
+  retention:
+    keep_last: 3
+    keep_daily: 7
+    keep_weekly: 4
+    keep_monthly: 3
+
+  verification:
+    verify_new: true
+    full_schedule: "sun 04:00"
+
+  garbage_collection:
+    schedule: "sun 06:00"
+
+  host_config:
+    enabled: true
+    schedule: "03:30"
+    strategy: "proxmox-backup-client"
+
+  secrets:
+    storage: "ansible_vault"
+    repository_rule: "Never commit PBS tokens, passwords, fingerprints with secrets, or encryption keys."
