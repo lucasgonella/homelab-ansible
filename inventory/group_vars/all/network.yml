@@ -29,12 +29,21 @@ homelab_hosts:
     ip: "192.168.1.16"
     status: "reserved"
 
+  ntfy:
+    ip: "192.168.1.17"
+
+  pve02:
+    ip: "192.168.1.18"
+
 homelab_dns_records:
   - ip: "{{ homelab_hosts.pihole.ip }}"
     hostname: "pihole.gonella.home"
 
   - ip: "{{ homelab_hosts.pve01.ip }}"
     hostname: "pve01.gonella.home"
+
+  - ip: "{{ homelab_hosts.pve02.ip }}"
+    hostname: "pve02.gonella.home"
 
   - ip: "{{ homelab_hosts.monitor01.ip }}"
     hostname: "monitor01.gonella.home"
@@ -50,6 +59,9 @@ homelab_dns_records:
 
   - ip: "{{ homelab_hosts.runner01.ip }}"
     hostname: "runner01.gonella.home"
+
+  - ip: "{{ homelab_hosts.ntfy.ip }}"
+    hostname: "ntfy.gonella.home"
 
   - ip: "192.168.1.26"
     hostname: "iphonegonella.gonella.home"

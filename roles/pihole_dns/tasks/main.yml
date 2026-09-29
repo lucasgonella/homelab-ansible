@@ -32,6 +32,13 @@
   changed_when: false
   check_mode: false
 
+- name: Exibir drift de DNS no check mode
+  ansible.builtin.debug:
+    msg: "Os registros DNS do Pi-hole seriam sincronizados com o estado declarado no Ansible."
+  when:
+    - ansible_check_mode
+    - pihole_dns_current.stdout | trim != pihole_dns_desired_display | trim
+
 - name: Sincronizar registros DNS do Pi-hole
   ansible.builtin.command:
     argv:
@@ -39,7 +46,9 @@
       - --config
       - dns.hosts
       - "{{ pihole_dns_desired_records | to_json }}"
-  when: pihole_dns_current.stdout | trim != pihole_dns_desired_display | trim
+  when:
+    - not ansible_check_mode
+    - pihole_dns_current.stdout | trim != pihole_dns_desired_display | trim
   register: pihole_dns_update
   changed_when: true
 
@@ -61,3 +70,4 @@
       A configuração dns.hosts do Pi-hole não corresponde
       ao estado declarado no Ansible.
     success_msg: "Registros DNS do Pi-hole estão sincronizados com o Ansible."
+  when: not ansible_check_mode
