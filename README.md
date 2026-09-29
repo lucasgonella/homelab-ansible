@@ -16,10 +16,15 @@ flowchart TD
     R --> P[pihole\n192.168.1.10]
     R --> M[monitor01 / Zabbix\n192.168.1.12]
     R --> S[myspeed\n192.168.1.13]
-    R --> PV[pve01 / Proxmox VE\n192.168.1.11]
-    R --> PV2[pve02 / Proxmox VE\n192.168.1.18]
+    R --> PV2[pve02 / Proxmox VE PRINCIPAL\n192.168.1.18]
+    R -. rollback .-> PV[pve01 / rollback temporário\n192.168.1.11]
 
-    PV --> B[Backup de configuração\nstorage externo ao Proxmox]
+    PV2 --> A
+    PV2 --> P
+    PV2 --> M
+    PV2 --> S
+    PV -. futuro .-> PBS[pbs01 / Proxmox Backup Server]
+    PV2 -. backups .-> PBS
 ```
 
 Os endereços mostrados são **RFC1918 privados** e representam a topologia lógica do laboratório. Eles não são endereços públicos acessíveis pela Internet.
@@ -35,8 +40,8 @@ O `runner01` é o nó de controle Ansible. Os hosts são acessados via SSH usand
 | `pihole` | `192.168.1.10` | `managed_linux` | Pi-hole + Unbound / DNS interno |
 | `monitor01` | `192.168.1.12` | `managed_linux` | Zabbix Server |
 | `myspeed` | `192.168.1.13` | `managed_linux` | Medições de download/upload |
-| `pve01` | `192.168.1.11` | `proxmox` | Proxmox VE |
-| `pve02` | `192.168.1.18` | `proxmox` | Proxmox VE |
+| `pve01` | `192.168.1.11` | `proxmox_rollback` | Rollback temporário; futuro PBS/DR |
+| `pve02` | `192.168.1.18` | `proxmox` | Proxmox VE principal |
 
 Após convergência, o `site.yml` foi validado com todos esses hosts em `changed=0`, `unreachable=0` e `failed=0`.
 
@@ -106,7 +111,11 @@ Contém o `runner01` e aplica configurações exclusivas do nó de controle.
 
 ### `proxmox`
 
-Contém `pve01` e `pve02`, que recebem uma role própria. O objetivo é evitar aplicar indiscriminadamente o baseline dos servidores Linux comuns ao hypervisor.
+Contém somente o `pve02`, hypervisor principal do HomeLab. Ele recebe a role `proxmox_host` sem aplicar indiscriminadamente o baseline dos servidores Linux comuns.
+
+### `proxmox_rollback`
+
+Contém o `pve01` durante a janela de rollback. Ele não é incluído no play principal do Proxmox e não precisa permanecer ligado. Após a estabilização do `pve02`, o plano é reprovisioná-lo como `pbs01` (Proxmox Backup Server).
 
 ## Playbook principal
 
@@ -180,7 +189,7 @@ O usuário e o home do control node são resolvidos dinamicamente a partir do am
 
 ### `proxmox_host`
 
-Role específica do `pve01`.
+Role aplicada ao hypervisor Proxmox VE ativo, atualmente o `pve02`.
 
 Responsabilidades atuais:
 
@@ -193,39 +202,37 @@ Responsabilidades atuais:
 
 A role **não gerencia automaticamente rede, storage ou cluster do Proxmox** neste estágio do projeto.
 
-## Backup da configuração do Proxmox
+## Backup e Disaster Recovery
 
-A role `proxmox_host` gerencia a automação que cria um backup de configuração do `pve01` fora do próprio hypervisor.
+O `pve02` é o hypervisor principal. O `pve01` permanece temporariamente como rollback e, após a janela de estabilização, será reprovisionado como `pbs01`, um Proxmox Backup Server físico separado.
 
-Defaults atuais:
-
-```yaml
-proxmox_config_backup_hour: "17"
-proxmox_config_backup_minute: "00"
-proxmox_config_backup_mount: "/mnt/pve/backup-desktop"
-proxmox_config_backup_subdir: "host-config"
-proxmox_config_backup_keep: 7
-```
-
-O script coleta informações como inventário de VMs/LXCs, storage, rede, discos, pacotes e configurações importantes do host antes de gerar o arquivo compactado.
-
-O fluxo foi validado ponta a ponta:
+A política declarativa está em:
 
 ```text
-systemd timer
-    ↓
-pve01-config-backup.service
-    ↓
-backup-pve01-config.sh
-    ↓
-storage externo
-    ↓
-arquivo tar.gz
-    ↓
-validação de integridade
+inventory/group_vars/all/backup.yml
 ```
 
-**Os arquivos de backup não fazem parte deste repositório.** Eles podem conter material sensível e permanecem no storage de backup.
+Resumo:
+
+```text
+pve02 / Proxmox VE
+        │
+        │ backup diário 02:00
+        ▼
+pbs01 / Proxmox Backup Server
+        │
+        ├── 7 diários
+        ├── 4 semanais
+        ├── 3 mensais
+        ├── verify-new
+        └── verificação semanal
+```
+
+O backup legado de configuração baseado em mount foi generalizado para qualquer hostname, mas permanece desabilitado por padrão. A arquitetura definitiva usa PBS para os guests e prevê `proxmox-backup-client` para a configuração do host.
+
+Detalhes e fases de implantação: [`docs/backup-strategy.md`](docs/backup-strategy.md).
+
+**Backups, tokens, senhas e chaves não fazem parte deste repositório.**
 
 ## Ansible Vault
 
@@ -260,7 +267,7 @@ ansible-inventory --graph
 
 ```bash
 ansible managed_linux -m ping
-ansible pve01 -m ping
+ansible pve02 -m ping
 ```
 
 ### Validar sintaxe
@@ -298,7 +305,7 @@ Uma segunda execução deve convergir para `changed=0` quando não houver drift.
 
 ## Detecção e correção de drift
 
-O projeto foi testado alterando intencionalmente a permissão de um arquivo gerenciado no `pve01`.
+O projeto foi testado alterando intencionalmente a permissão de um arquivo gerenciado em um host Proxmox.
 
 Na execução seguinte, o Ansible detectou a divergência e restaurou o estado definido pela role:
 
@@ -399,12 +406,12 @@ A base do projeto já entrega:
 
 - inventário centralizado;
 - cinco hosts Linux gerenciados;
-- dois hosts Proxmox gerenciados separadamente;
+- um hypervisor Proxmox principal (`pve02`) e um nó de rollback/DR (`pve01`);
 - roles reutilizáveis;
 - idempotência validada;
 - Zabbix Agent padronizado;
 - Ansible Control Node gerenciado pelo próprio Ansible;
-- backup automático do Proxmox gerenciado como código;
+- política de backup/DR com Proxmox Backup Server declarada como código;
 - estrutura preparada para uso local de Ansible Vault;
 - Git workflow com Pull Requests.
 
