@@ -17,6 +17,7 @@ flowchart TD
     R --> M[monitor01 / Zabbix\n192.168.1.12]
     R --> S[myspeed\n192.168.1.13]
     R --> PV[pve01 / Proxmox VE\n192.168.1.11]
+    R --> PV2[pve02 / Proxmox VE\n192.168.1.18]
 
     PV --> B[Backup de configuração\nstorage externo ao Proxmox]
 ```
@@ -35,6 +36,7 @@ O `runner01` é o nó de controle Ansible. Os hosts são acessados via SSH usand
 | `monitor01` | `192.168.1.12` | `managed_linux` | Zabbix Server |
 | `myspeed` | `192.168.1.13` | `managed_linux` | Medições de download/upload |
 | `pve01` | `192.168.1.11` | `proxmox` | Proxmox VE |
+| `pve02` | `192.168.1.18` | `proxmox` | Proxmox VE |
 
 Após convergência, o `site.yml` foi validado com todos esses hosts em `changed=0`, `unreachable=0` e `failed=0`.
 
@@ -104,7 +106,7 @@ Contém o `runner01` e aplica configurações exclusivas do nó de controle.
 
 ### `proxmox`
 
-Contém o `pve01` e recebe uma role própria. O objetivo é evitar aplicar indiscriminadamente o baseline dos servidores Linux comuns ao hypervisor.
+Contém `pve01` e `pve02`, que recebem uma role própria. O objetivo é evitar aplicar indiscriminadamente o baseline dos servidores Linux comuns ao hypervisor.
 
 ## Playbook principal
 
@@ -397,7 +399,7 @@ A base do projeto já entrega:
 
 - inventário centralizado;
 - cinco hosts Linux gerenciados;
-- um host Proxmox gerenciado separadamente;
+- dois hosts Proxmox gerenciados separadamente;
 - roles reutilizáveis;
 - idempotência validada;
 - Zabbix Agent padronizado;
