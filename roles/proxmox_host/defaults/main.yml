@@ -1,6 +1,8 @@
 ---
 proxmox_zabbix_server: "{{ homelab_hosts.monitor01.ip }}"
 
+proxmox_config_backup_enabled: "{{ inventory_hostname == 'pve01' }}"
+
 proxmox_config_backup_hour: "17"
 proxmox_config_backup_minute: "00"
 
