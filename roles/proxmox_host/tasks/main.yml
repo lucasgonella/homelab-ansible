@@ -4,6 +4,7 @@
     cmd: pveversion
   register: proxmox_version
   changed_when: false
+  check_mode: false
 
 - name: Exibir versao do Proxmox
   ansible.builtin.debug:
@@ -18,12 +19,18 @@
       - zabbix-agent2
     state: present
 
+- name: Verificar arquivo de configuracao do Zabbix Agent 2
+  ansible.builtin.stat:
+    path: /etc/zabbix/zabbix_agent2.conf
+  register: proxmox_zabbix_agent_config
+
 - name: Configurar servidor Zabbix
   ansible.builtin.lineinfile:
     path: /etc/zabbix/zabbix_agent2.conf
     regexp: '^Server='
     line: "Server={{ proxmox_zabbix_server }}"
   notify: Restart Zabbix Agent 2
+  when: proxmox_zabbix_agent_config.stat.exists
 
 - name: Configurar active checks do Zabbix
   ansible.builtin.lineinfile:
@@ -31,6 +38,7 @@
     regexp: '^ServerActive='
     line: "ServerActive={{ proxmox_zabbix_server }}"
   notify: Restart Zabbix Agent 2
+  when: proxmox_zabbix_agent_config.stat.exists
 
 - name: Configurar hostname do Zabbix Agent
   ansible.builtin.lineinfile:
@@ -38,12 +46,14 @@
     regexp: '^Hostname='
     line: "Hostname={{ inventory_hostname }}"
   notify: Restart Zabbix Agent 2
+  when: proxmox_zabbix_agent_config.stat.exists
 
 - name: Garantir Zabbix Agent 2 ativo
   ansible.builtin.service:
     name: zabbix-agent2
     state: started
     enabled: true
+  when: proxmox_zabbix_agent_config.stat.exists
 
 - name: Instalar script de backup da configuracao do Proxmox
   ansible.builtin.template:
@@ -52,6 +62,7 @@
     owner: root
     group: root
     mode: '0700'
+  when: proxmox_config_backup_enabled | bool
 
 - name: Instalar systemd service do backup do Proxmox
   ansible.builtin.copy:
@@ -60,6 +71,7 @@
     owner: root
     group: root
     mode: '0644'
+  when: proxmox_config_backup_enabled | bool
 
 - name: Instalar systemd timer do backup do Proxmox
   ansible.builtin.template:
@@ -69,6 +81,7 @@
     group: root
     mode: '0644'
   notify: Restart Proxmox backup timer
+  when: proxmox_config_backup_enabled | bool
 
 - name: Garantir timer de backup do Proxmox habilitado
   ansible.builtin.systemd:
@@ -76,3 +89,4 @@
     enabled: true
     state: started
     daemon_reload: true
+  when: proxmox_config_backup_enabled | bool
