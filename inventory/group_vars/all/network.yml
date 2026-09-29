@@ -12,6 +12,8 @@ homelab_hosts:
 
   pve01:
     ip: "192.168.1.11"
+    status: "rollback"
+    target_role: "proxmox_backup_server"
 
   monitor01:
     ip: "192.168.1.12"
@@ -34,6 +36,8 @@ homelab_hosts:
 
   pve02:
     ip: "192.168.1.18"
+    status: "primary"
+    role: "proxmox_ve"
 
 homelab_dns_records:
   - ip: "{{ homelab_hosts.pihole.ip }}"
